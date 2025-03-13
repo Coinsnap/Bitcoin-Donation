@@ -10,15 +10,37 @@ class Bitcoin_Donation_Shortcode
         add_shortcode('bitcoin_donation', [$this, 'bitcoin_donation_render_shortcode']);
     }
 
+    private function get_template($template_name, $args = [])
+    {
+        if ($args && is_array($args)) {
+            extract($args);
+        }
+
+        $template = plugin_dir_path(__FILE__) . '../templates/' . $template_name . '.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
+
     function bitcoin_donation_render_shortcode()
     {
         $options = get_option('bitcoin_donation_forms_options');
         $options = is_array($options) ? $options : [];
         $options_general = get_option('bitcoin_donation_options');
         $theme_class = $options_general['theme'] === 'dark' ? 'bitcoin-donation-dark-theme' : 'bitcoin-donation-light-theme';
-        $currency = $options['currency'] ?? 'USD';
+        $modal_theme = $options_general['theme'] === 'dark' ? 'dark-theme' : 'light-theme';
         $button_text = $options['button_text'] ?? 'Donate';
         $title_text = $options['title_text'] ?? 'Donate with Bitcoin';
+        $first_name = $options['simple_donation_first_name'];
+        $last_name = $options['simple_donation_last_name'];
+        $email = $options['simple_donation_email'];
+        $address = $options['simple_donation_address'];
+        $message = $options['simple_donation_message'];
+        $public_donors = $options['simple_donation_public_donors'];
+        $custom = $options['simple_donation_custom_field_visibility'];
+        $custom_name = $options['simple_donation_custom_field_name'];
         $active = $options['simple_donation_active'] ?? '1';
         if (!$active) {
             ob_start();
@@ -37,7 +59,8 @@ class Bitcoin_Donation_Shortcode
 
         ob_start();
         ?>
-        <div class="bitcoin-donation-donation-form <?php echo esc_attr($theme_class); ?> narrow-form">
+        <div class="bitcoin-donation-donation-form <?php echo esc_attr($theme_class);
+                                                    echo " " . esc_attr($modal_theme) ?> narrow-form">
             <div class="bitcoin-donation-title-wrapper">
                 <h3><?php echo esc_html($title_text); ?></h3>
                 <select id="bitcoin-donation-swap" class="currency-swapper">
@@ -61,20 +84,27 @@ class Bitcoin_Donation_Shortcode
                 </div>
             </div>
 
-            <!-- <label for="bitcoin-donation-amount">Amount (in <?php echo esc_html($currency); ?>):</label>
-            <input type="text" id="bitcoin-donation-amount" step="0.01"> -->
-
-            <!-- <label for="bitcoin-donation-satoshi">Satoshi:</label>
-            <input type="text" id="bitcoin-donation-satoshi"> -->
-
             <label for="bitcoin-donation-message">Message:</label>
             <textarea id="bitcoin-donation-message" class="bitcoin-donation-message" rows="2"></textarea>
-
             <button id="bitcoin-donation-pay"><?php echo esc_html($button_text); ?></button>
+            <div id="bitcoin-donation-blur-overlay" class="blur-overlay"></div>
+            <?php
+            $this->get_template('bitcoin-donation-modal', [
+                'prefix' => 'bitcoin-donation-',
+                'sufix' => '',
+                'first_name' => $first_name,
+                'last_name' => $last_name,
+                'email' => $email,
+                'address' => $address,
+                'message' => $message,
+                'public_donors' => $public_donors,
+                'custom' => $custom,
+                'custom_name' => $custom_name,
+            ]);
+            ?>
         </div>
 
 <?php
-
         return ob_get_clean();
     }
 }

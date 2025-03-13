@@ -10,18 +10,40 @@ class Bitcoin_Donation_Shoutouts_Form
         add_shortcode('shoutout_form', [$this, 'bitcoin_donation_render_shortcode']);
     }
 
+    private function get_template($template_name, $args = [])
+    {
+        if ($args && is_array($args)) {
+            extract($args);
+        }
+
+        $template = plugin_dir_path(__FILE__) . '../templates/' . $template_name . '.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
     function bitcoin_donation_render_shortcode()
     {
         $options = get_option('bitcoin_donation_forms_options');
         $options = is_array($options) ? $options : [];
         $options_general = get_option('bitcoin_donation_options');
         $theme_class = $options_general['theme'] === 'dark' ? 'bitcoin-donation-dark-theme' : 'bitcoin-donation-light-theme';
-        $currency = $options['shoutout_currency'] ?? 'USD';
+        $modal_theme = $options_general['theme'] === 'dark' ? 'dark-theme' : 'light-theme';
         $button_text = $options['shoutout_button_text'] ?? 'Shoutout';
         $title_text = $options['shoutout_title_text'] ?? 'Bitcoin Shoutouts';
         $min_amount = (int)$options['shoutout_minimum_amount'] ?? 21;
         $premium_amount = (int)$options['shoutout_premium_amount'] ?? 21000;
         $active = $options['shoutout_donation_active'] ?? '1';
+        $first_name = $options['shoutout_donation_first_name'];
+        $last_name = $options['shoutout_donation_last_name'];
+        $email = $options['shoutout_donation_email'];
+        $address = $options['shoutout_donation_address'];
+        $message = $options['shoutout_donation_message'];
+        $custom = $options['shoutout_donation_custom_field_visibility'];
+        $custom_name = $options['shoutout_donation_custom_field_name'];
+        $public_donors = $options['shoutout_public_donors'];
+
         if (!$active) {
             ob_start();
 ?>
@@ -40,13 +62,23 @@ class Bitcoin_Donation_Shoutouts_Form
         ob_start();
         ?>
         <div id="bitcoin-donation-shoutouts-form" class="bitcoin-donation-donation-form">
-            <div class="shoutout-form-wrapper <?php echo esc_attr($theme_class); ?>">
+            <div class="shoutout-form-wrapper <?php echo esc_attr($theme_class);
+                                                echo " " . esc_attr($modal_theme) ?>">
                 <form method="post">
                     <?php wp_nonce_field('shoutout_nonce', 'shoutout_nonce'); ?>
                     <input type="hidden" name="shoutout_submitted" value="1">
 
                     <div class="bitcoin-donation-title-wrapper">
                         <h3><?php echo esc_html($title_text); ?></h3>
+                        <select id="bitcoin-donation-shoutout-swap" class="currency-swapper">
+                            <option value="EUR">EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="JPY">JPY</option>
+                            <option value="GBP">GBP</option>
+                            <option value="sats">SATS</option>
+                            <option value="CHF">CHF</option>
+                        </select>
                     </div>
                     <div class="shoutout-form-container">
                         <div class="shoutout-form-left">
@@ -58,13 +90,13 @@ class Bitcoin_Donation_Shoutouts_Form
                             <!-- Honeypot field -->
                             <input type="text" id="bitcoin-donation-shoutout-email" name="email" style="display: none;" aria-hidden="true">
                             <div class="shoutout-input-label">
-                                <label for="bitcoin-donation-shoutout-amount">Amount (in <?php echo esc_html($currency); ?>):</label>
-                                <input type="text" id="bitcoin-donation-shoutout-amount" name="amount" step="0.00000001">
-                            </div>
-
-                            <div class="shoutout-input-label">
-                                <label for="bitcoin-donation-shoutout-satoshi">Satoshi:</label>
-                                <input type="text" id="bitcoin-donation-shoutout-satoshi" name="satoshi" min="<?php echo esc_attr($min_amount); ?>">
+                                <label for="bitcoin-donation-shoutout-amount">Amount</label>
+                                <div class="amount-wrapper">
+                                    <input type="text" id="bitcoin-donation-shoutout-amount">
+                                    <div class="secondary-amount">
+                                        <span id="bitcoin-donation-shoutout-satoshi"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="bitcoin-donation-shoutout-help">
@@ -80,10 +112,25 @@ class Bitcoin_Donation_Shoutouts_Form
                         </div>
                     </div>
                     <div class="shoutout-button-container">
-                        <button id="bitcoin-donation-shout" type="submit" name="submit_shoutout" onclick="return false;"><?php echo esc_html($button_text); ?></button>
+                        <button id="bitcoin-donation-shoutout-pay" type="submit" name="submit_shoutout" onclick="return false;"><?php echo esc_html($button_text); ?></button>
                     </div>
                 </form>
             </div>
+            <div id="bitcoin-donation-shoutout-blur-overlay" class="blur-overlay"></div>
+            <?php
+            $this->get_template('bitcoin-donation-modal', [
+                'prefix' => 'bitcoin-donation-shoutout-',
+                'sufix' => '',
+                'first_name' => $first_name,
+                'last_name' => $last_name,
+                'email' => $email,
+                'address' => $address,
+                'message' => $message,
+                'public_donors' => $public_donors,
+                'custom' => $custom,
+                'custom_name' => $custom_name,
+            ]);
+            ?>
         </div>
 <?php
 

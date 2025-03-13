@@ -10,18 +10,40 @@ class Bitcoin_Donation_Shortcode_Multi_Amount_Wide
         add_shortcode('multi_amount_donation_wide', [$this, 'bitcoin_donation_multi_render_shortcode_wide']);
     }
 
+    private function get_template($template_name, $args = [])
+    {
+        if ($args && is_array($args)) {
+            extract($args);
+        }
+
+        $template = plugin_dir_path(__FILE__) . '../templates/' . $template_name . '.php';
+
+        if (file_exists($template)) {
+            include $template;
+        }
+    }
+
     function bitcoin_donation_multi_render_shortcode_wide()
     {
         $options = get_option('bitcoin_donation_forms_options');
         $options_general = get_option('bitcoin_donation_options');
         $options = is_array($options) ? $options : [];
         $theme_class = $options_general['theme'] === 'dark' ? 'bitcoin-donation-dark-theme' : 'bitcoin-donation-light-theme';
+        $modal_theme = $options_general['theme'] === 'dark' ? 'dark-theme' : 'light-theme';
         $button_text = $options['multi_amount_button_text'] ?? 'Donate';
         $title_text = $options['multi_amount_title_text'] ?? 'Donate with Bitcoin';
         $snap1 = $options['multi_amount_default_snap1'] ?? '1';
         $snap2 = $options['multi_amount_default_snap2'] ?? '1';
         $snap3 = $options['multi_amount_default_snap3'] ?? '1';
         $active = $options['multi_amount_donation_active'] ?? '1';
+        $first_name = $options['multi_amount_first_name'];
+        $last_name = $options['multi_amount_last_name'];
+        $email = $options['multi_amount_email'];
+        $address = $options['multi_amount_address'];
+        $message = $options['multi_amount_message'];
+        $custom = $options['multi_amount_custom_field_visibility'];
+        $custom_name = $options['multi_amount_custom_field_name'];
+        $public_donors = $options['multi_amount_public_donors'];
         if (!$active) {
             ob_start();
 ?>
@@ -39,11 +61,12 @@ class Bitcoin_Donation_Shortcode_Multi_Amount_Wide
 
         ob_start();
         ?>
-        <div class="bitcoin-donation-donation-form <?php echo esc_attr($theme_class); ?> wide-form">
+        <div class="bitcoin-donation-donation-form <?php echo esc_attr($theme_class);
+                                                    echo " " . esc_attr($modal_theme); ?> wide-form">
             <div class="bitcoin-donation-multi-wide-wrapper">
                 <div class="bitcoin-donation-title-wrapper">
                     <h3><?php echo esc_html($title_text); ?></h3>
-                    <select id="bitcoin-donation-multi-swap-wide" class="currency-swapper">
+                    <select id="bitcoin-donation-swap-multi-wide" class="currency-swapper">
                         <option value="EUR">EUR</option>
                         <option value="USD">USD</option>
                         <option value="CAD">CAD</option>
@@ -101,6 +124,21 @@ class Bitcoin_Donation_Shortcode_Multi_Amount_Wide
 
                 <button class="multi-wide-button" id="bitcoin-donation-pay-multi-wide"><?php echo esc_html($button_text); ?></button>
             </div>
+            <div id="bitcoin-donation-blur-overlay-multi-wide" class="blur-overlay"></div>
+            <?php
+            $this->get_template('bitcoin-donation-modal', [
+                'prefix' => 'bitcoin-donation-',
+                'sufix' => '-multi-wide',
+                'first_name' => $first_name,
+                'last_name' => $last_name,
+                'email' => $email,
+                'address' => $address,
+                'message' => $message,
+                'public_donors' => $public_donors,
+                'custom' => $custom,
+                'custom_name' => $custom_name,
+            ]);
+            ?>
         </div>
 
 <?php

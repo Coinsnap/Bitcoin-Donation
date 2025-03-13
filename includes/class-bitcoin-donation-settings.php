@@ -29,7 +29,7 @@ class Bitcoin_Donation_Settings
             'manage_options',
             'bitcoin_donation',
             [$this, 'bitcoin_donation_options_page'],
-            plugin_dir_url(__FILE__) . 'assets/bitcoin.svg',
+            plugin_dir_url(dirname(__FILE__)) . 'assets/bitcoin.svg',
 
             100
         );
@@ -71,6 +71,20 @@ class Bitcoin_Donation_Settings
             'Polls',
             'manage_options',
             'edit.php?post_type=bitcoin-polls'
+        );
+        add_submenu_page(
+            'bitcoin_donation',
+            'Crowdfundings',
+            'Crowdfundings',
+            'manage_options',
+            'edit.php?post_type=bitcoin-cfs'
+        );
+        add_submenu_page(
+            'bitcoin_donation',
+            'Public Donors',
+            'Public Donors',
+            'manage_options',
+            'edit.php?post_type=bitcoin-pds'
         );
     }
 
